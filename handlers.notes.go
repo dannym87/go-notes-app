@@ -18,17 +18,17 @@ func InitNotesHandler(e *gin.Engine, db *gorm.DB) *NotesHandler {
 	nh := NotesHandler{e, db}
 	v1 := e.Group("/v1")
 	{
-		v1.GET("/notes", nh.ListNotesHandler)
-		v1.GET("/notes/:id", nh.GetNoteHandler)
-		v1.POST("/notes", nh.CreateNoteHandler)
-		v1.DELETE("/notes/:id", nh.DeleteNoteHandler)
-		v1.PATCH("/notes/:id", nh.UpdateNoteHandler)
+		v1.GET("/notes", nh.List)
+		v1.GET("/notes/:id", nh.Get)
+		v1.POST("/notes", nh.Create)
+		v1.DELETE("/notes/:id", nh.Delete)
+		v1.PATCH("/notes/:id", nh.Update)
 	}
 
 	return &nh
 }
 
-func (nh *NotesHandler) ListNotesHandler(c *gin.Context) {
+func (nh *NotesHandler) List(c *gin.Context) {
 	var notes []*Note
 
 	if err := nh.db.Find(&notes).Error; err != nil {
@@ -41,7 +41,7 @@ func (nh *NotesHandler) ListNotesHandler(c *gin.Context) {
 	c.Data(http.StatusOK, jsonapi.MediaType, response.Bytes())
 }
 
-func (nh *NotesHandler) GetNoteHandler(c *gin.Context) {
+func (nh *NotesHandler) Get(c *gin.Context) {
 	var note Note
 
 	if err := nh.db.Where("id = ?", c.Param("id")).Find(&note).Error; err != nil {
@@ -54,7 +54,7 @@ func (nh *NotesHandler) GetNoteHandler(c *gin.Context) {
 	c.Data(http.StatusOK, jsonapi.MediaType, response.Bytes())
 }
 
-func (nh *NotesHandler) CreateNoteHandler(c *gin.Context) {
+func (nh *NotesHandler) Create(c *gin.Context) {
 	var note Note
 	payload, _ := c.GetRawData()
 
@@ -76,7 +76,7 @@ func (nh *NotesHandler) CreateNoteHandler(c *gin.Context) {
 	c.Data(http.StatusCreated, jsonapi.MediaType, response.Bytes())
 }
 
-func (nh *NotesHandler) DeleteNoteHandler(c *gin.Context) {
+func (nh *NotesHandler) Delete(c *gin.Context) {
 	var note Note
 
 	if err := nh.db.Where("id = ?", c.Param("id")).Find(&note).Error; err != nil {
@@ -92,7 +92,7 @@ func (nh *NotesHandler) DeleteNoteHandler(c *gin.Context) {
 	c.Data(http.StatusNoContent, jsonapi.MediaType, []byte(""))
 }
 
-func (nh *NotesHandler) UpdateNoteHandler(c *gin.Context) {
+func (nh *NotesHandler) Update(c *gin.Context) {
 	var note Note
 
 	if err := nh.db.Where("id = ?", c.Param("id")).Find(&note).Error; err != nil {
