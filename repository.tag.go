@@ -19,7 +19,7 @@ func NewTagRepository(db *gorm.DB) TagRepository {
 func (r *ORMTagRepository) FindById(id int) (*Tag, error) {
 	tag := new(Tag)
 
-	if err := r.db.Where("id = ?", id).Find(tag).Error; err != nil {
+	if err := r.db.First(tag, id).Error; err != nil {
 		return nil, err
 	}
 

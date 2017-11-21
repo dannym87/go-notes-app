@@ -20,7 +20,7 @@ func NewNoteRepository(db *gorm.DB) NoteRepository {
 func (r ORMNoteRepository) FindById(id int) (*Note, error) {
 	note := new(Note)
 
-	if err := r.db.Where("id = ?", id).Preload("Tags").Find(note).Error; err != nil {
+	if err := r.db.Preload("Tags").First(note, id).Error; err != nil {
 		return nil, err
 	}
 
