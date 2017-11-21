@@ -7,6 +7,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"net/http"
 	"strconv"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 type NotesHandler struct {
@@ -15,18 +16,20 @@ type NotesHandler struct {
 	noteRepository  NoteRepository
 	tagRepository   TagRepository
 	responseHandler ResponseHandler
+	validator       *validator.Validate
 }
 
-func InitNotesHandler(e *gin.Engine) *NotesHandler {
+func InitNotesHandler(app *App) *NotesHandler {
 	h := &NotesHandler{
-		e,
-		db,
-		NewNoteRepository(),
-		NewTagRepository(),
-		responseHandler,
+		app.Engine(),
+		app.Db(),
+		NewNoteRepository(app.Db()),
+		NewTagRepository(app.Db()),
+		app.ResponseHandler(),
+		app.Validator(),
 	}
 
-	v1 := e.Group("/v1")
+	v1 := app.engine.Group("/v1")
 	{
 		v1.GET("/notes", h.List)
 		v1.GET("/notes/:id", h.Get)
@@ -77,7 +80,7 @@ func (h *NotesHandler) Create(c *gin.Context) {
 
 	h.mapTags(note)
 
-	if err := validate.Struct(note); err != nil {
+	if err := h.validator.Struct(note); err != nil {
 		h.responseHandler.ValidationErrors(c, http.StatusBadRequest, err)
 		return
 	}
@@ -125,7 +128,7 @@ func (h *NotesHandler) Update(c *gin.Context) {
 
 	h.mapTags(note)
 
-	if err := validate.Struct(note); err != nil {
+	if err := h.validator.Struct(note); err != nil {
 		h.responseHandler.ValidationErrors(c, http.StatusBadRequest, err)
 		return
 	}

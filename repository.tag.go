@@ -12,7 +12,7 @@ type ORMTagRepository struct {
 	db *gorm.DB
 }
 
-func NewTagRepository() TagRepository {
+func NewTagRepository(db *gorm.DB) TagRepository {
 	return &ORMTagRepository{db}
 }
 
