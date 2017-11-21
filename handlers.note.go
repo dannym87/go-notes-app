@@ -11,7 +11,6 @@ import (
 )
 
 type NotesHandler struct {
-	engine          *gin.Engine
 	db              *gorm.DB
 	noteRepository  NoteRepository
 	tagRepository   TagRepository
@@ -21,7 +20,6 @@ type NotesHandler struct {
 
 func InitNotesHandler(app *App) *NotesHandler {
 	h := &NotesHandler{
-		app.Engine(),
 		app.Db(),
 		NewNoteRepository(app.Db()),
 		NewTagRepository(app.Db()),

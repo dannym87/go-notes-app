@@ -5,6 +5,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"log"
 	"gopkg.in/go-playground/validator.v9"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 type App struct {
