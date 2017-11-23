@@ -6,11 +6,11 @@ import (
 )
 
 type Note struct {
-	Id        uint      `jsonapi:"primary,notes"`
-	Title     string    `jsonapi:"attr,title" validate:"required"`
-	Text      string    `jsonapi:"attr,text" validate:"omitempty"`
-	Tags      []*Tag    `jsonapi:"relation,tags,omitempty" gorm:"many2many:note_tags;" validate:"omitempty,dive,required"`
-	CreatedAt time.Time `jsonapi:"attr,created_at,iso8601"`
+	Id        uint      `json:"id"`
+	Title     string    `json:"title" validate:"required"`
+	Text      string    `json:"text" validate:"omitempty"`
+	Tags      []*Tag    `json:"tags,omitempty" gorm:"many2many:note_tags;" validate:"omitempty,dive,required"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 /*

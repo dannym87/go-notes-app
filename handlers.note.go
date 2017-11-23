@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"github.com/gin-gonic/gin"
 	"github.com/google/jsonapi"
 	"github.com/jinzhu/gorm"
@@ -68,18 +67,17 @@ func (h *NotesHandler) Get(c *gin.Context) {
 
 func (h *NotesHandler) Create(c *gin.Context) {
 	note := new(Note)
-	payload, _ := c.GetRawData()
 
-	request := bytes.NewBuffer(payload)
-	if err := jsonapi.UnmarshalPayload(request, note); err != nil {
+	if err := c.BindJSON(note); err != nil {
 		h.responseHandler.MalformedJSON(c)
 		return
 	}
 
+	note.Id = 0
 	h.mapTags(note)
 
 	if err := h.validator.Struct(note); err != nil {
-		h.responseHandler.ValidationErrors(c, http.StatusBadRequest, err)
+		h.responseHandler.ValidationErrors(c, err)
 		return
 	}
 
@@ -116,18 +114,16 @@ func (h *NotesHandler) Update(c *gin.Context) {
 		return
 	}
 
-	payload, _ := c.GetRawData()
-	request := bytes.NewBuffer(payload)
-
-	if err := jsonapi.UnmarshalPayload(request, note); err != nil {
+	if err := c.BindJSON(note); err != nil {
 		h.responseHandler.MalformedJSON(c)
 		return
 	}
 
+	note.Id = uint(id)
 	h.mapTags(note)
 
 	if err := h.validator.Struct(note); err != nil {
-		h.responseHandler.ValidationErrors(c, http.StatusBadRequest, err)
+		h.responseHandler.ValidationErrors(c, err)
 		return
 	}
 

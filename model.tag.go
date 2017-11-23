@@ -3,9 +3,9 @@ package main
 import "time"
 
 type Tag struct {
-	Id        uint      `jsonapi:"primary,tags"`
-	Name      string    `jsonapi:"attr,name" validate:"required"`
-	CreatedAt time.Time `jsonapi:"attr,created_at,iso8601"`
+	Id        uint      `json:"tags"`
+	Name      string    `json:"name" validate:"required"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func (t *Tag) ExchangeData(tag *Tag) *Tag {

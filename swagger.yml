@@ -1,0 +1,356 @@
+---
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: Notes API
+  license:
+    name: MIT
+host: localhost:8080
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  "/v1/notes":
+    get:
+      description: List all notes
+      operationId: listNotes
+      tags:
+        - notes
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          type: integer
+      responses:
+        200:
+          description: A paged array of notes
+          schema:
+            title: Notes
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: array
+                items:
+                  "$ref": "#/definitions/Note"
+    post:
+      description: Create a note
+      operationId: createNote
+      tags:
+        - notes
+      parameters:
+        - in: body
+          name: note
+          description: The note to create
+          schema:
+            "$ref": "#/definitions/Note"
+      responses:
+        201:
+          description: The created note
+          schema:
+            title: Note
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                "$ref": "#/definitions/Note"
+        400:
+          description: Malformed JSON
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+        422:
+          description: Validation failures
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+        404:
+          description: Note does not exist
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+  "/v1/notes/{noteId}":
+    get:
+      description: Info for a specific note
+      operationId: showNoteById
+      tags:
+        - notes
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: The id of the note to retrieve
+          type: string
+      responses:
+        200:
+          description: Info for a specific note
+          schema:
+            title: Note
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                "$ref": "#/definitions/Note"
+        404:
+          description: Note does not exist
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+    delete:
+      description: Delete a specific note
+      operationId: deleteNoteById
+      tags:
+        - notes
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: The id of the note to retrieve
+          type: string
+      responses:
+        204:
+          description: No content for a valid request
+        404:
+          description: Note does not exist
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+    patch:
+      description: Update a specific note
+      operationId: updateNoteById
+      tags:
+        - notes
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: The id of the note to retrieve
+          type: string
+        - in: body
+          name: note
+          description: The note to create
+          schema:
+            "$ref": "#/definitions/Note"
+      responses:
+        200:
+          description: The updated note
+          schema:
+            title: Note
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                "$ref": "#/definitions/Note"
+        400:
+          description: Malformed JSON
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+        422:
+          description: Validation failures
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+        404:
+          description: Note does not exist
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+  "/v1/tags":
+    get:
+      description: List all tags
+      operationId: listTags
+      tags:
+        - tags
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          type: integer
+      responses:
+        200:
+          description: A paged array of tags
+          schema:
+            title: Tags
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: array
+                items:
+                  "$ref": "#/definitions/Tag"
+    post:
+      description: Create a tag
+      operationId: createTag
+      tags:
+        - tags
+      parameters:
+        - in: body
+          name: tag
+          description: The tag to create
+          schema:
+            "$ref": "#/definitions/Tag"
+      responses:
+        201:
+          description: The created tag
+          schema:
+            title: Tag
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                "$ref": "#/definitions/Tag"
+        400:
+          description: Malformed JSON
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+        422:
+          description: Validation failures
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+        404:
+          description: Tag does not exist
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+  "/v1/tags/{tagId}":
+    get:
+      description: Info for a specific tag
+      operationId: showTagById
+      tags:
+        - tags
+      parameters:
+        - name: tagId
+          in: path
+          required: true
+          description: The id of the tag to retrieve
+          type: string
+      responses:
+        200:
+          description: Info for a specific tag
+          schema:
+            title: Tag
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                "$ref": "#/definitions/Tag"
+        404:
+          description: Tag does not exist
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+    delete:
+      description: Delete a specific tag
+      operationId: deleteTagById
+      tags:
+        - tags
+      parameters:
+        - name: tagId
+          in: path
+          required: true
+          description: The id of the tag to retrieve
+          type: string
+      responses:
+        204:
+          description: No content for a valid request
+        404:
+          description: Tag does not exist
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+    patch:
+      description: Update a specific tag
+      operationId: updateTagById
+      tags:
+        - tags
+      parameters:
+        - name: tagId
+          in: path
+          required: true
+          description: The id of the tag to retrieve
+          type: string
+        - in: body
+          name: tag
+          description: The tag to create
+          schema:
+            "$ref": "#/definitions/Tag"
+      responses:
+        200:
+          description: The updated tag
+          schema:
+            title: Tag
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                "$ref": "#/definitions/Tag"
+        400:
+          description: Malformed JSON
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+        422:
+          description: Validation failures
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+        404:
+          description: Tag does not exist
+          schema:
+            "$ref": "#/definitions/ErrorsResponse"
+definitions:
+  Note:
+    type: object
+    required:
+      - title
+    properties:
+      id:
+        type: integer
+      title:
+        type: string
+      text:
+        type: string
+      tags:
+        type: array
+        items:
+          "$ref": "#/definitions/Tags"
+  Notes:
+    type: array
+    items:
+      "$ref": "#/definitions/Note"
+  Tag:
+    type: object
+    required:
+      - name
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      created_at:
+        description: ISO 8601 Date/Time
+        type: string
+        format: date-time
+  Tags:
+    type: array
+    items:
+      "$ref": "#/definitions/Tag"
+  Error:
+    type: object
+    properties:
+      title:
+        type: string
+      detail:
+        type: string
+      status:
+        type: integer
+  ErrorsResponse:
+    type: object
+    required:
+      - errors
+    properties:
+      errors:
+        type: array
+        items:
+          "$ref": "#/definitions/Error"
