@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/google/jsonapi"
 	"github.com/jinzhu/gorm"
 	"net/http"
 	"strconv"
@@ -101,7 +100,7 @@ func (h *NotesHandler) Delete(c *gin.Context) {
 		h.responseHandler.InternalServerError(c)
 	}
 
-	c.Data(http.StatusNoContent, jsonapi.MediaType, []byte(""))
+	h.responseHandler.JSON(c, http.StatusNoContent, "")
 }
 
 func (h *NotesHandler) Update(c *gin.Context) {
