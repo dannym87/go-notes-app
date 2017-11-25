@@ -71,7 +71,7 @@ func (h *TagsHandler) Create(c *gin.Context) {
 		return
 	}
 
-	tag.Id = 0
+	tag.ID = 0
 
 	if err := h.validator.Struct(tag); err != nil {
 		h.responseHandler.ValidationErrors(c, err)
@@ -116,7 +116,7 @@ func (h *TagsHandler) Update(c *gin.Context) {
 		return
 	}
 
-	tag.Id = uint(id)
+	tag.ID = uint(id)
 
 	if err := h.validator.Struct(tag); err != nil {
 		h.responseHandler.ValidationErrors(c, err)

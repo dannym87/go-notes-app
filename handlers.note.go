@@ -66,22 +66,21 @@ func (h *NotesHandler) Get(c *gin.Context) {
 }
 
 func (h *NotesHandler) Create(c *gin.Context) {
-	note := new(Note)
+	n := new(Note)
 
-	if err := c.BindJSON(note); err != nil {
+	if err := c.BindJSON(n); err != nil {
 		h.responseHandler.MalformedJSON(c)
 		return
 	}
 
-	note.Id = 0
-	h.mapTags(note)
-
-	if err := h.validator.Struct(note); err != nil {
+	if err := h.validator.Struct(n); err != nil {
 		h.responseHandler.ValidationErrors(c, err)
 		return
 	}
 
-	if err := h.db.Create(note).Error; err != nil {
+	note, err := h.noteRepository.Create(n)
+
+	if err != nil {
 		h.responseHandler.InternalServerError(c)
 		return
 	}
@@ -107,48 +106,29 @@ func (h *NotesHandler) Delete(c *gin.Context) {
 
 func (h *NotesHandler) Update(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	note, err := h.noteRepository.FindById(id)
+	n, err := h.noteRepository.FindById(id)
 
 	if err != nil {
 		h.responseHandler.NotFound(c)
 		return
 	}
 
-	if err := c.BindJSON(note); err != nil {
+	if err := c.BindJSON(n); err != nil {
 		h.responseHandler.MalformedJSON(c)
 		return
 	}
 
-	note.Id = uint(id)
-	h.mapTags(note)
-
-	if err := h.validator.Struct(note); err != nil {
+	if err := h.validator.Struct(n); err != nil {
 		h.responseHandler.ValidationErrors(c, err)
 		return
 	}
 
-	if err := h.db.Save(note).Error; err != nil {
+	note, err := h.noteRepository.Update(id, n)
+
+	if err != nil {
 		h.responseHandler.InternalServerError(c)
 		return
 	}
 
 	h.responseHandler.JSON(c, http.StatusOK, note)
-}
-
-func (h *NotesHandler) mapTags(note *Note) {
-	for _, tag := range note.Tags {
-		t, err := h.tagRepository.FindById(int(tag.Id))
-		if err == nil {
-			tag.ExchangeData(t)
-			continue
-		}
-
-		t, err = h.tagRepository.FindByName(tag.Name)
-		if err == nil {
-			tag.ExchangeData(t)
-			continue
-		}
-	}
-
-	h.db.Model(note).Association("Tags").Replace(note.Tags)
 }
