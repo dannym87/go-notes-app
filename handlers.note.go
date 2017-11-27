@@ -96,7 +96,7 @@ func (h *NotesHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.db.Delete(note).Error; err != nil {
+	if err := h.noteRepository.Delete(note); err != nil {
 		h.responseHandler.InternalServerError(c)
 	}
 

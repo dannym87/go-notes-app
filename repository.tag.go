@@ -8,6 +8,7 @@ type TagRepository interface {
 	FindAll(limit int, offset int) ([]*Tag, error)
 	Create(t *Tag) (*Tag, error)
 	Update(id int, t *Tag) (*Tag, error)
+	Delete(t *Tag) error
 }
 
 type ORMTagRepository struct {
@@ -66,4 +67,12 @@ func (r *ORMTagRepository) Update(id int, t *Tag) (*Tag, error) {
 	}
 
 	return tag, nil
+}
+
+func (r *ORMTagRepository) Delete(t *Tag) error {
+	if err := r.db.Delete(t).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

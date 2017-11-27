@@ -9,6 +9,7 @@ type NoteRepository interface {
 	FindAll(limit int, offset int) ([]*Note, error)
 	Create(n *Note) (*Note, error)
 	Update(id int, n *Note) (*Note, error)
+	Delete(n *Note) error
 }
 
 type ORMNoteRepository struct {
@@ -85,4 +86,12 @@ func (r *ORMNoteRepository) SaveTags(n *Note) {
 	}
 
 	r.db.Model(n).Association("Tags").Replace(&tags)
+}
+
+func (r *ORMNoteRepository) Delete(n *Note) error {
+	if err := r.db.Delete(n).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

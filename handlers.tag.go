@@ -98,7 +98,7 @@ func (h *TagsHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.db.Delete(tag).Error; err != nil {
+	if err := h.tagRepository.Delete(tag); err != nil {
 		h.responseHandler.InternalServerError(c)
 	}
 
