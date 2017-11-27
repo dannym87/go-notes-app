@@ -25,9 +25,5 @@ func DbUnique(ctx context.Context, fl validator.FieldLevel) bool {
 	var count int
 	db.Table(table).Where(fmt.Sprintf("%s = ?", column), fl.Field().String()).Count(&count)
 
-	if count > 0 {
-		return false
-	}
-
-	return true
+	return count == 0
 }
