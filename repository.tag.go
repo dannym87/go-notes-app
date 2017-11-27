@@ -6,6 +6,8 @@ type TagRepository interface {
 	FindById(id int) (*Tag, error)
 	FindByName(name string) (*Tag, error)
 	FindAll(limit int, offset int) ([]*Tag, error)
+	Create(t *Tag) (*Tag, error)
+	Update(id int, t *Tag) (*Tag, error)
 }
 
 type ORMTagRepository struct {
@@ -44,4 +46,24 @@ func (r *ORMTagRepository) FindAll(limit int, offset int) ([]*Tag, error) {
 	}
 
 	return tags, nil
+}
+
+func (r *ORMTagRepository) Create(t *Tag) (*Tag, error) {
+	tag := &Tag{Name: t.Name}
+
+	if err := r.db.Create(tag).Error; err != nil {
+		return t, err
+	}
+
+	return tag, nil
+}
+
+func (r *ORMTagRepository) Update(id int, t *Tag) (*Tag, error) {
+	tag, _ := r.FindById(id)
+
+	if err := r.db.Model(tag).UpdateColumns(&Tag{Name: t.Name}).Error; err != nil {
+		return t, err
+	}
+
+	return tag, nil
 }

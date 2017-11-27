@@ -18,6 +18,7 @@ type App struct {
 func InitApp() *App {
 	db, err := gorm.Open("sqlite3", "./notes.db")
 	db.LogMode(true)
+	db.SingularTable(true)
 
 	if err != nil {
 		log.Fatal("Could not connect database")
@@ -26,7 +27,7 @@ func InitApp() *App {
 	// Migrate the schema
 	db.AutoMigrate(&Note{}, &Tag{})
 
-	validator := validator.New()
+	validator := InitValidator()
 	responseHandler := NewResponseHandler()
 	r := gin.Default()
 	r.NoRoute(responseHandler.NoRoute)

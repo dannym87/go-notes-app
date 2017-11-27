@@ -2,11 +2,11 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/google/jsonapi"
 	"github.com/jinzhu/gorm"
 	"net/http"
 	"strconv"
 	"gopkg.in/go-playground/validator.v9"
+	"context"
 )
 
 type TagsHandler struct {
@@ -64,21 +64,22 @@ func (h *TagsHandler) Get(c *gin.Context) {
 }
 
 func (h *TagsHandler) Create(c *gin.Context) {
-	tag := new(Tag)
+	t := new(Tag)
 
-	if err := c.BindJSON(tag); err != nil {
+	if err := c.BindJSON(t); err != nil {
 		h.responseHandler.MalformedJSON(c)
 		return
 	}
 
-	tag.ID = 0
-
-	if err := h.validator.Struct(tag); err != nil {
+	ctx := context.WithValue(context.Background(), "db", h.db)
+	if err := h.validator.StructCtx(ctx, t); err != nil {
 		h.responseHandler.ValidationErrors(c, err)
 		return
 	}
 
-	if err := h.db.Create(tag).Error; err != nil {
+	tag, err := h.tagRepository.Create(t)
+
+	if err != nil {
 		h.responseHandler.InternalServerError(c)
 		return
 	}
@@ -99,31 +100,32 @@ func (h *TagsHandler) Delete(c *gin.Context) {
 		h.responseHandler.InternalServerError(c)
 	}
 
-	c.Data(http.StatusNoContent, jsonapi.MediaType, []byte(""))
+	h.responseHandler.JSON(c, http.StatusNoContent, "")
 }
 
 func (h *TagsHandler) Update(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	tag, err := h.tagRepository.FindById(id)
+	t, err := h.tagRepository.FindById(id)
 
 	if err != nil {
 		h.responseHandler.NotFound(c)
 		return
 	}
 
-	if err := c.BindJSON(tag); err != nil {
+	if err := c.BindJSON(t); err != nil {
 		h.responseHandler.MalformedJSON(c)
 		return
 	}
 
-	tag.ID = uint(id)
-
-	if err := h.validator.Struct(tag); err != nil {
+	ctx := context.WithValue(context.Background(), "db", h.db)
+	if err := h.validator.StructCtx(ctx, t); err != nil {
 		h.responseHandler.ValidationErrors(c, err)
 		return
 	}
 
-	if err := h.db.Save(tag).Error; err != nil {
+	tag, err := h.tagRepository.Update(id, t)
+
+	if err != nil {
 		h.responseHandler.InternalServerError(c)
 		return
 	}
