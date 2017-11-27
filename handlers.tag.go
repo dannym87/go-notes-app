@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"gopkg.in/go-playground/validator.v9"
-	"context"
+	"fmt"
 )
 
 type TagsHandler struct {
@@ -42,7 +42,6 @@ func (h *TagsHandler) List(c *gin.Context) {
 	offset := (page * limit) - limit
 
 	tags, err := h.tagRepository.FindAll(limit, offset)
-
 	if err != nil {
 		h.responseHandler.InternalServerError(c)
 		return
@@ -71,14 +70,17 @@ func (h *TagsHandler) Create(c *gin.Context) {
 		return
 	}
 
-	ctx := context.WithValue(context.Background(), "db", h.db)
-	if err := h.validator.StructCtx(ctx, t); err != nil {
+	if err := h.validator.Struct(t); err != nil {
 		h.responseHandler.ValidationErrors(c, err)
 		return
 	}
 
-	tag, err := h.tagRepository.Create(t)
+	if _, err := h.tagRepository.FindByName(t.Name); err == nil {
+		h.responseHandler.Error(c, ValidationError, http.StatusUnprocessableEntity, fmt.Sprintf("Tag '%s' already exists", t.Name))
+		return
+	}
 
+	tag, err := h.tagRepository.Create(t)
 	if err != nil {
 		h.responseHandler.InternalServerError(c)
 		return
@@ -117,14 +119,18 @@ func (h *TagsHandler) Update(c *gin.Context) {
 		return
 	}
 
-	ctx := context.WithValue(context.Background(), "db", h.db)
-	if err := h.validator.StructCtx(ctx, t); err != nil {
+	if err := h.validator.Struct(t); err != nil {
 		h.responseHandler.ValidationErrors(c, err)
 		return
 	}
 
-	tag, err := h.tagRepository.Update(id, t)
+	tagExists, err := h.tagRepository.FindByName(t.Name)
+	if err == nil && tagExists.ID != uint(id) {
+		h.responseHandler.Error(c, ValidationError, http.StatusUnprocessableEntity, fmt.Sprintf("Tag '%s' already exists", t.Name))
+		return
+	}
 
+	tag, err := h.tagRepository.Update(id, t)
 	if err != nil {
 		h.responseHandler.InternalServerError(c)
 		return
