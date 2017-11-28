@@ -84,7 +84,7 @@ func (h *NotesHandler) Create(c *gin.Context) {
 		return
 	}
 
-	h.responseHandler.JSON(c, http.StatusOK, note)
+	h.responseHandler.JSON(c, http.StatusCreated, note)
 }
 
 func (h *NotesHandler) Delete(c *gin.Context) {

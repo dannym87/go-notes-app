@@ -47,10 +47,20 @@ func populateDB(db *gorm.DB) {
 	db.DropTable(&Note{}, &Tag{})
 	db.AutoMigrate(&Note{}, &Tag{})
 	createTags(db, 11)
+	createNotes(db, 11)
 }
 
 func createTags(db *gorm.DB, count int) {
-	for i := 1; i < count + 1; i++ {
+	for i := 1; i < count+1; i++ {
 		db.Create(&Tag{Name: fmt.Sprintf("Tag %d", i)})
+	}
+}
+
+func createNotes(db *gorm.DB, count int) {
+	for i := 1; i < count+1; i++ {
+		db.Create(&Note{
+			Title: fmt.Sprintf("Note %d", i),
+			Text:  fmt.Sprintf("Note %d text...", i),
+		})
 	}
 }
