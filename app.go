@@ -27,7 +27,7 @@ func InitApp() *App {
 	// Migrate the schema
 	db.AutoMigrate(&Note{}, &Tag{})
 
-	validator := InitValidator()
+	validator := NewValidator()
 	responseHandler := NewResponseHandler()
 	r := gin.Default()
 	r.NoRoute(responseHandler.NoRoute)

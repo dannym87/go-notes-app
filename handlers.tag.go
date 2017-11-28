@@ -86,7 +86,7 @@ func (h *TagsHandler) Create(c *gin.Context) {
 		return
 	}
 
-	h.responseHandler.JSON(c, http.StatusOK, tag)
+	h.responseHandler.JSON(c, http.StatusCreated, tag)
 }
 
 func (h *TagsHandler) Delete(c *gin.Context) {
