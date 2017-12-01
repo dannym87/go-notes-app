@@ -113,6 +113,69 @@ func TestNotesHandler_CreateSuccess(t *testing.T) {
 	})
 }
 
+func TestNotesHandler_CreateSuccessWithTags(t *testing.T) {
+	data, _ := json.Marshal(Note{
+		Title: "Note X",
+		Text:  "Note X text...",
+		Tags: []*Tag{
+			&Tag{Name: "Tag 1"},
+			&Tag{Name: "Tag 2"},
+			&Tag{Name: "New Tag"},
+		},
+	})
+	req, _ := http.NewRequest(http.MethodPost, "/v1/notes", bytes.NewBuffer(data))
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		if w.Code != http.StatusCreated {
+			t.Errorf("Expected status code 201, got '%d'", w.Code)
+			return false
+		}
+
+		data := struct {
+			Note *Note `json:"data"`
+		}{}
+
+		if err := json.Unmarshal(w.Body.Bytes(), &data); err != nil {
+			t.Error("Failed to unmarshal json")
+			return false
+		}
+
+		if data.Note.Title != "Note X" {
+			t.Errorf("Expected note title 'Note X', got '%s'", data.Note.Title)
+			return false
+		}
+
+		if data.Note.Text != "Note X text..." {
+			t.Errorf("Expected note text 'Note X text...', got '%s'", data.Note.Text)
+			return false
+		}
+
+		if len(data.Note.Tags) != 3 {
+			t.Errorf("Expected 3 tags, got '%d'", len(data.Note.Tags))
+			return false
+		}
+
+		if data.Note.Tags[0].ID != 1 && data.Note.Tags[0].Name != "Tag 1" {
+			t.Errorf("Exepected tag[1, Tag 1], got tag[%d, %s]", data.Note.Tags[0].ID, data.Note.Tags[0].Name)
+			return false
+		}
+
+		if data.Note.Tags[1].ID != 1 && data.Note.Tags[1].Name != "Tag 2" {
+			t.Errorf("Exepected tag[2, Tag 2], got tag[%d, %s]", data.Note.Tags[1].ID, data.Note.Tags[1].Name)
+			return false
+		}
+
+		if data.Note.Tags[2].Name != "New Tag" {
+			t.Errorf("Exepected tag[New Tag], got tag[%s]", data.Note.Tags[2].Name)
+			return false
+		}
+
+		app.Db().Where("name = ?", "New Tag").Delete(Tag{})
+
+		return true
+	})
+}
+
 func TestNotesHandler_CreateValidationErrors(t *testing.T) {
 	data, _ := json.Marshal(Note{})
 	req, _ := http.NewRequest(http.MethodPost, "/v1/notes", bytes.NewBuffer(data))
