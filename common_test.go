@@ -44,7 +44,7 @@ func testHTTPResponse(t *testing.T, r *gin.Engine, req *http.Request, f func(w *
 }
 
 func populateDB(db *gorm.DB) {
-	db.DropTable(&Note{}, &Tag{})
+	db.DropTable(&Note{}, &Tag{}, "note_tags")
 	db.AutoMigrate(&Note{}, &Tag{})
 	createTags(db, 11)
 	createNotes(db, 11)

@@ -170,6 +170,7 @@ func TestNotesHandler_CreateSuccessWithTags(t *testing.T) {
 			return false
 		}
 
+		app.Db().Delete(data.Note)
 		app.Db().Where("name = ?", "New Tag").Delete(Tag{})
 
 		return true
