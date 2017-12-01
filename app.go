@@ -6,6 +6,7 @@ import (
 	"log"
 	"gopkg.in/go-playground/validator.v9"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/gin-contrib/cors"
 )
 
 type App struct {
@@ -30,6 +31,7 @@ func InitApp() *App {
 	validator := NewValidator()
 	responseHandler := NewResponseHandler()
 	r := gin.Default()
+	r.Use(cors.Default())
 	r.NoRoute(responseHandler.NoRoute)
 
 	app := &App{r, db, responseHandler, validator}
