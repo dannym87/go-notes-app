@@ -11,14 +11,30 @@ import (
 
 func TestTagsHandler_GetSuccess(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/v1/tags/1", nil)
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		return w.Code == http.StatusOK
 	})
 }
 
+func TestTagsHandler_GetUnauthorised(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "/v1/tags/1", nil)
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusUnauthorized
+	})
+}
+
 func TestTagsHandler_GetNotFound(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/v1/tags/0", nil)
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		return w.Code == http.StatusNotFound
@@ -27,6 +43,10 @@ func TestTagsHandler_GetNotFound(t *testing.T) {
 
 func TestTagsHandler_ListSuccess(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/v1/tags", nil)
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusOK {
@@ -52,8 +72,20 @@ func TestTagsHandler_ListSuccess(t *testing.T) {
 	})
 }
 
+func TestTagsHandler_ListUnauthorised(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "/v1/tags", nil)
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusUnauthorized
+	})
+}
+
 func TestTagsHandler_ListSuccessPage2(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/v1/tags?page=2", nil)
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusOK {
@@ -83,14 +115,30 @@ func TestTagsHandler_DeleteSuccess(t *testing.T) {
 	tag := &Tag{Name: "Go"}
 	app.Db().Create(&tag)
 	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/v1/tags/%d", tag.ID), nil)
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		return w.Code == http.StatusNoContent
 	})
 }
 
+func TestTagsHandler_DeleteUnauthorised(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodDelete, "/v1/tags/1", nil)
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusUnauthorized
+	})
+}
+
 func TestTagsHandler_DeleteNotFound(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodDelete, "/v1/tags/0", nil)
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		return w.Code == http.StatusNotFound
@@ -100,9 +148,14 @@ func TestTagsHandler_DeleteNotFound(t *testing.T) {
 func TestTagsHandler_CreateSuccess(t *testing.T) {
 	data, _ := json.Marshal(Tag{Name: "Go"})
 	req, _ := http.NewRequest(http.MethodPost, "/v1/tags", bytes.NewBuffer(data))
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusCreated {
+			fmt.Println(w.Body.String())
 			t.Errorf("Expected status code 201, got '%d'", w.Code)
 			return false
 		}
@@ -113,9 +166,22 @@ func TestTagsHandler_CreateSuccess(t *testing.T) {
 	})
 }
 
+func TestTagsHandler_CreateUnauthorised(t *testing.T) {
+	data, _ := json.Marshal(Tag{Name: "Go"})
+	req, _ := http.NewRequest(http.MethodPost, "/v1/tags", bytes.NewBuffer(data))
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusUnauthorized
+	})
+}
+
 func TestTagsHandler_CreateTagAlreadyExists(t *testing.T) {
 	data, _ := json.Marshal(Tag{Name: "Tag 1"})
 	req, _ := http.NewRequest(http.MethodPost, "/v1/tags", bytes.NewBuffer(data))
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusUnprocessableEntity {
@@ -150,6 +216,10 @@ func TestTagsHandler_CreateTagAlreadyExists(t *testing.T) {
 func TestTagsHandler_CreateValidationErrors(t *testing.T) {
 	data, _ := json.Marshal(Tag{})
 	req, _ := http.NewRequest(http.MethodPost, "/v1/tags", bytes.NewBuffer(data))
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusUnprocessableEntity {
@@ -184,6 +254,10 @@ func TestTagsHandler_CreateValidationErrors(t *testing.T) {
 func TestTagsHandler_UpdateSuccess(t *testing.T) {
 	data, _ := json.Marshal(Tag{Name: "Go"})
 	req, _ := http.NewRequest(http.MethodPatch, "/v1/tags/1", bytes.NewBuffer(data))
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusOK {
@@ -200,9 +274,22 @@ func TestTagsHandler_UpdateSuccess(t *testing.T) {
 	})
 }
 
+func TestTagsHandler_UpdateUnauthorised(t *testing.T) {
+	data, _ := json.Marshal(Tag{Name: "Go"})
+	req, _ := http.NewRequest(http.MethodPatch, "/v1/tags/1", bytes.NewBuffer(data))
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusUnauthorized
+	})
+}
+
 func TestTagsHandler_UpdateValidationErrors(t *testing.T) {
 	data, _ := json.Marshal(Tag{})
 	req, _ := http.NewRequest(http.MethodPatch, "/v1/tags/1", bytes.NewBuffer(data))
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusUnprocessableEntity {
@@ -237,6 +324,10 @@ func TestTagsHandler_UpdateValidationErrors(t *testing.T) {
 func TestTagsHandler_UpdateTagAlreadyExists(t *testing.T) {
 	data, _ := json.Marshal(Tag{Name: "Tag 2"})
 	req, _ := http.NewRequest(http.MethodPatch, "/v1/tags/1", bytes.NewBuffer(data))
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusUnprocessableEntity {
@@ -271,6 +362,10 @@ func TestTagsHandler_UpdateTagAlreadyExists(t *testing.T) {
 func TestTagsHandler_UpdateNameCanRemainTheSame(t *testing.T) {
 	data, _ := json.Marshal(Tag{Name: "Tag 1"})
 	req, _ := http.NewRequest(http.MethodPatch, "/v1/tags/1", bytes.NewBuffer(data))
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusOK {

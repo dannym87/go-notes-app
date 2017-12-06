@@ -18,6 +18,7 @@ type ResponseHandler interface {
 	NotFound(c *gin.Context)
 	MalformedJSON(c *gin.Context)
 	NoRoute(c *gin.Context)
+	Unauthorised(c *gin.Context)
 }
 
 type APIResponseHandler struct{}
@@ -72,4 +73,8 @@ func (r *APIResponseHandler) ValidationErrors(c *gin.Context, err error) {
 	}
 
 	r.Errors(c, http.StatusUnprocessableEntity, errors)
+}
+
+func (r *APIResponseHandler) Unauthorised(c *gin.Context) {
+	r.Error(c, Unauthorised, http.StatusUnauthorized, "You don't have permission for this resource")
 }

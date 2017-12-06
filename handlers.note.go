@@ -13,6 +13,7 @@ type NotesHandler struct {
 	noteRepository  NoteRepository
 	tagRepository   TagRepository
 	responseHandler ResponseHandler
+	requestHandler  RequestHandler
 	validator       *validator.Validate
 }
 
@@ -22,27 +23,36 @@ func InitNotesHandler(app *App) *NotesHandler {
 		NewNoteRepository(app.Db()),
 		NewTagRepository(app.Db()),
 		app.ResponseHandler(),
+		app.requestHandler,
 		app.Validator(),
 	}
 
+	authMiddleware := NewAuthMiddleware(app)
+
 	v1 := app.engine.Group("/v1")
 	{
-		v1.GET("/notes", h.List)
-		v1.GET("/notes/:id", h.Get)
-		v1.POST("/notes", h.Create)
-		v1.DELETE("/notes/:id", h.Delete)
-		v1.PATCH("/notes/:id", h.Update)
+		v1.Use(authMiddleware).GET("/notes", h.List)
+		v1.Use(authMiddleware).GET("/notes/:id", h.Get)
+		v1.Use(authMiddleware).POST("/notes", h.Create)
+		v1.Use(authMiddleware).DELETE("/notes/:id", h.Delete)
+		v1.Use(authMiddleware).PATCH("/notes/:id", h.Update)
 	}
 
 	return h
 }
 
 func (h *NotesHandler) List(c *gin.Context) {
+	user, err := h.requestHandler.GetUser(c)
+	if err != nil {
+		h.responseHandler.InternalServerError(c)
+		return
+	}
+
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit := 10
 	offset := (page * limit) - limit
 
-	notes, err := h.noteRepository.FindAll(limit, offset)
+	notes, err := h.noteRepository.FindByUserId(int(user.ID), limit, offset)
 
 	if err != nil {
 		h.responseHandler.InternalServerError(c)
@@ -53,11 +63,21 @@ func (h *NotesHandler) List(c *gin.Context) {
 }
 
 func (h *NotesHandler) Get(c *gin.Context) {
+	user, err := h.requestHandler.GetUser(c)
+	if err != nil {
+		h.responseHandler.InternalServerError(c)
+		return
+	}
+
 	id, _ := strconv.Atoi(c.Param("id"))
 	note, err := h.noteRepository.FindById(id)
-
 	if err != nil {
 		h.responseHandler.NotFound(c)
+		return
+	}
+
+	if note.CreatedById != user.ID {
+		h.responseHandler.Unauthorised(c)
 		return
 	}
 
@@ -77,7 +97,15 @@ func (h *NotesHandler) Create(c *gin.Context) {
 		return
 	}
 
+	user, err := h.requestHandler.GetUser(c)
+	if err != nil {
+		h.responseHandler.InternalServerError(c)
+		return
+	}
+
+	n.CreatedById = user.ID
 	note, err := h.noteRepository.Create(n)
+	note.CreatedBy = user
 
 	if err != nil {
 		h.responseHandler.InternalServerError(c)
@@ -88,11 +116,22 @@ func (h *NotesHandler) Create(c *gin.Context) {
 }
 
 func (h *NotesHandler) Delete(c *gin.Context) {
+	user, err := h.requestHandler.GetUser(c)
+	if err != nil {
+		h.responseHandler.InternalServerError(c)
+		return
+	}
+
 	id, _ := strconv.Atoi(c.Param("id"))
 	note, err := h.noteRepository.FindById(id)
 
 	if err != nil {
 		h.responseHandler.NotFound(c)
+		return
+	}
+
+	if note.CreatedById != user.ID {
+		h.responseHandler.Unauthorised(c)
 		return
 	}
 
@@ -109,6 +148,11 @@ func (h *NotesHandler) Update(c *gin.Context) {
 
 	if err != nil {
 		h.responseHandler.NotFound(c)
+		return
+	}
+
+	if _, err := h.requestHandler.GetUser(c); err != nil {
+		h.responseHandler.InternalServerError(c)
 		return
 	}
 

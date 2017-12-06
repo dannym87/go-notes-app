@@ -6,9 +6,11 @@ import (
 
 type Note struct {
 	BaseModel
-	Title string `json:"title" validate:"required"`
-	Text  string `json:"text" validate:"omitempty"`
-	Tags  []*Tag `json:"tags,omitempty" gorm:"many2many:note_tags;" validate:"omitempty,dive,required"`
+	Title       string `json:"title" validate:"required"`
+	Text        string `json:"text" validate:"omitempty"`
+	Tags        []*Tag `json:"tags,omitempty" gorm:"many2many:note_tags;" validate:"omitempty,dive,required"`
+	CreatedBy   *User  `json:"created_by" gorm:"ForeignKey:CreatedById"`
+	CreatedById uint   `json:"-" gorm:"column:created_by"`
 }
 
 /*

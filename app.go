@@ -14,6 +14,7 @@ type App struct {
 	engine          *gin.Engine
 	db              *gorm.DB
 	responseHandler ResponseHandler
+	requestHandler  RequestHandler
 	validator       *validator.Validate
 	oauth2Server    *osin.Server
 }
@@ -45,7 +46,14 @@ func InitApp() *App {
 
 	oauth2 := NewOAuth2Server(db)
 
-	app := &App{r, db, responseHandler, validator, oauth2}
+	app := &App{
+		r,
+		db,
+		responseHandler,
+		NewRequestHandler(),
+		validator,
+		oauth2,
+	}
 
 	InitHandlers(app)
 
@@ -74,4 +82,8 @@ func (app *App) Validator() *validator.Validate {
 
 func (app *App) OAuth2Server() *osin.Server {
 	return app.oauth2Server
+}
+
+func (app *App) RequestHandler() RequestHandler {
+	return app.requestHandler
 }

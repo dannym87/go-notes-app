@@ -30,7 +30,14 @@ func initTestApp() {
 	r := gin.Default()
 	populateDB(db)
 
-	app = &App{r, db, NewResponseHandler(), NewValidator(), NewOAuth2Server(db)}
+	app = &App{
+		r,
+		db,
+		NewResponseHandler(),
+		NewRequestHandler(),
+		NewValidator(),
+		NewOAuth2Server(db),
+	}
 
 	InitHandlers(app)
 }
@@ -88,15 +95,19 @@ func createTags(db *gorm.DB, count int) {
 func createNotes(db *gorm.DB, count int) {
 	for i := 1; i < count+1; i++ {
 		db.Create(&Note{
-			Title: fmt.Sprintf("Note %d", i),
-			Text:  fmt.Sprintf("Note %d text...", i),
+			Title:       fmt.Sprintf("Note %d", i),
+			Text:        fmt.Sprintf("Note %d text...", i),
+			CreatedById: 1,
 		})
 	}
+
+	db.Create(&Note{Title: "User 2 Note 1", CreatedById: 2})
 }
 
 func createUsers(db *gorm.DB) {
 	db.Create(&User{Email: "test@go-notes.com", Firstname: "Go", Lastname: "Notes", Password: "$2a$12$RFgkr30MuLQmPU5LNrVNZ.gev80MwIZRwTcTUfZBmf19vegxQq9CS"})
 	db.Create(&User{Email: "test2@go-notes.com", Firstname: "Go2", Lastname: "Notes2", Password: "$2a$12$RFgkr30MuLQmPU5LNrVNZ.gev80MwIZRwTcTUfZBmf19vegxQq9CS"})
+	db.Create(&User{Email: "test3@go-notes.com", Firstname: "Go3", Lastname: "Notes3", Password: "$2a$12$RFgkr30MuLQmPU5LNrVNZ.gev80MwIZRwTcTUfZBmf19vegxQq9CS"})
 }
 
 func createOAuth2Clients(db *gorm.DB) {
@@ -109,9 +120,15 @@ func createOAuth2Clients(db *gorm.DB) {
 }
 
 func createOAuthAccessTokens(db *gorm.DB) {
-	db.Create(&OAuth2AccessToken{AccessToken: "access-token", Scope: "email", Expires: time.Now(), ClientId: 1, UserId: 1})
+	// +1 hour
+	expiry := time.Now().Local().Add(time.Hour)
+	db.Create(&OAuth2AccessToken{AccessToken: "access-token", Scope: "email", Expires: expiry, ClientId: 1, UserId: 1})
+	db.Create(&OAuth2AccessToken{AccessToken: "OWYzYjI3NDctY2ZmNy00ZjExLWExM2YtOTBlMmJhMWM2MDc1", Scope: "email", Expires: expiry, ClientId: 1, UserId: 3})
 }
 
 func createOAuthRefreshTokens(db *gorm.DB) {
-	db.Create(&OAuth2RefreshToken{RefreshToken: "refresh-token", Scope: "email", Expires: time.Now(), UserId: 1, ClientId: 1, AccessTokenId: 1})
+	// +31 days
+	expiry := time.Now().Local().Add(time.Hour * 24 * 31)
+	db.Create(&OAuth2RefreshToken{RefreshToken: "refresh-token", Scope: "email", Expires: expiry, UserId: 1, ClientId: 1, AccessTokenId: 1})
+	db.Create(&OAuth2RefreshToken{RefreshToken: "N2U3MTdmYjgtMzJhNi00MTE4LThjODMtYzQzM2RlZTBjZGFm", Scope: "email", Expires: expiry, UserId: 3, ClientId: 1, AccessTokenId: 2})
 }

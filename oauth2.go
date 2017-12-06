@@ -15,10 +15,10 @@ type GORMStorage struct {
 
 func NewOAuth2Server(db *gorm.DB) *osin.Server {
 	conf := osin.NewServerConfig()
-	conf.AllowedAccessTypes = osin.AllowedAccessType{osin.PASSWORD}
-	conf.AllowGetAccessRequest = true
+	conf.AllowedAccessTypes = osin.AllowedAccessType{osin.PASSWORD, osin.REFRESH_TOKEN}
 	conf.ErrorStatusCode = http.StatusBadRequest
 	conf.AccessExpiration = 3600
+	conf.AllowClientSecretInParams = true
 
 	return osin.NewServer(conf, &GORMStorage{db})
 }

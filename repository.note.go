@@ -7,6 +7,7 @@ import (
 type NoteRepository interface {
 	FindById(id int) (*Note, error)
 	FindAll(limit int, offset int) ([]*Note, error)
+	FindByUserId(user int, limit int, offset int) ([]*Note, error)
 	Create(n *Note) (*Note, error)
 	Update(id int, n *Note) (*Note, error)
 	Delete(n *Note) error
@@ -23,7 +24,7 @@ func NewNoteRepository(db *gorm.DB) NoteRepository {
 func (r *ORMNoteRepository) FindById(id int) (*Note, error) {
 	note := new(Note)
 
-	if err := r.db.Preload("Tags").First(note, id).Error; err != nil {
+	if err := r.db.Preload("CreatedBy").Preload("Tags").First(note, id).Error; err != nil {
 		return nil, err
 	}
 
@@ -33,7 +34,30 @@ func (r *ORMNoteRepository) FindById(id int) (*Note, error) {
 func (r *ORMNoteRepository) FindAll(limit int, offset int) ([]*Note, error) {
 	var notes []*Note
 
-	if err := r.db.Preload("Tags").Limit(limit).Offset(offset).Find(&notes).Error; err != nil {
+	err := r.db.Preload("CreatedBy").
+		Preload("Tags").
+		Limit(limit).
+		Offset(offset).
+		Find(&notes).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return notes, nil
+}
+
+func (r *ORMNoteRepository) FindByUserId(user int, limit int, offset int) ([]*Note, error) {
+	var notes []*Note
+
+	err := r.db.Where("created_by = ?", user).
+		Preload("CreatedBy").
+		Preload("Tags").
+		Limit(limit).
+		Offset(offset).
+		Find(&notes).Error
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -42,8 +66,9 @@ func (r *ORMNoteRepository) FindAll(limit int, offset int) ([]*Note, error) {
 
 func (r *ORMNoteRepository) Create(n *Note) (*Note, error) {
 	note := &Note{
-		Title: n.Title,
-		Text:  n.Text,
+		Title:       n.Title,
+		Text:        n.Text,
+		CreatedById: n.CreatedById,
 	}
 
 	if err := r.db.Create(note).Error; err != nil {

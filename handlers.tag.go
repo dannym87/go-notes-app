@@ -24,13 +24,15 @@ func InitTagsHandler(app *App) *TagsHandler {
 		app.Validator(),
 	}
 
+	authMiddleware := NewAuthMiddleware(app)
+
 	v1 := app.engine.Group("/v1")
 	{
-		v1.GET("/tags", h.List)
-		v1.GET("/tags/:id", h.Get)
-		v1.POST("/tags", h.Create)
-		v1.DELETE("/tags/:id", h.Delete)
-		v1.PATCH("/tags/:id", h.Update)
+		v1.Use(authMiddleware).GET("/tags", h.List)
+		v1.Use(authMiddleware).GET("/tags/:id", h.Get)
+		v1.Use(authMiddleware).POST("/tags", h.Create)
+		v1.Use(authMiddleware).DELETE("/tags/:id", h.Delete)
+		v1.Use(authMiddleware).PATCH("/tags/:id", h.Update)
 	}
 
 	return h

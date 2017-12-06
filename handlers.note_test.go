@@ -11,14 +11,38 @@ import (
 
 func TestNotesHandler_GetSuccess(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/v1/notes/1", nil)
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		return w.Code == http.StatusOK
 	})
 }
 
+func TestNotesHandler_GetNotAuthenticated(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "/v1/notes/1", nil)
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusUnauthorized
+	})
+}
+
+func TestNotesHandler_GetNotAuthorisedToViewAnotherUsersNote(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "/v1/notes/12", nil)
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusUnauthorized
+	})
+}
+
 func TestNotesHandler_GetNotFound(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/v1/notes/0", nil)
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		return w.Code == http.StatusNotFound
@@ -27,6 +51,10 @@ func TestNotesHandler_GetNotFound(t *testing.T) {
 
 func TestNotesHandler_ListSuccess(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/v1/notes", nil)
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusOK {
@@ -52,8 +80,20 @@ func TestNotesHandler_ListSuccess(t *testing.T) {
 	})
 }
 
+func TestNotesHandler_ListUnauthorised(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "/v1/notes", nil)
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusUnauthorized
+	})
+}
+
 func TestNotesHandler_ListSuccessPage2(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/v1/notes?page=2", nil)
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusOK {
@@ -80,17 +120,45 @@ func TestNotesHandler_ListSuccessPage2(t *testing.T) {
 }
 
 func TestNotesHandler_DeleteSuccess(t *testing.T) {
-	note := &Note{Title: "Note X", Text: "Note X text..."}
+	note := &Note{Title: "Note X", Text: "Note X text...", CreatedById: 1}
 	app.Db().Create(&note)
 	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/v1/notes/%d", note.ID), nil)
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		return w.Code == http.StatusNoContent
 	})
 }
 
+func TestNotesHandler_DeleteNotAuthorisedToDeleteAnotherUsersNote(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodDelete, "/v1/notes/12", nil)
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusUnauthorized
+	})
+}
+
+func TestNotesHandler_DeleteNotAuthenticated(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodDelete, "/v1/notes/1", nil)
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusUnauthorized
+	})
+}
+
 func TestNotesHandler_DeleteNotFound(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodDelete, "/v1/notes/0", nil)
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		return w.Code == http.StatusNotFound
@@ -100,6 +168,10 @@ func TestNotesHandler_DeleteNotFound(t *testing.T) {
 func TestNotesHandler_CreateSuccess(t *testing.T) {
 	data, _ := json.Marshal(Note{Title: "Note X", Text: "Note X text..."})
 	req, _ := http.NewRequest(http.MethodPost, "/v1/notes", bytes.NewBuffer(data))
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusCreated {
@@ -110,6 +182,15 @@ func TestNotesHandler_CreateSuccess(t *testing.T) {
 		app.Db().Where("title = ?", "Note X").Delete(Note{})
 
 		return true
+	})
+}
+
+func TestNotesHandler_CreateNotAuthenticated(t *testing.T) {
+	data, _ := json.Marshal(Note{Title: "Note X", Text: "Note X text..."})
+	req, _ := http.NewRequest(http.MethodPost, "/v1/notes", bytes.NewBuffer(data))
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusUnauthorized
 	})
 }
 
@@ -124,6 +205,10 @@ func TestNotesHandler_CreateSuccessWithTags(t *testing.T) {
 		},
 	})
 	req, _ := http.NewRequest(http.MethodPost, "/v1/notes", bytes.NewBuffer(data))
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusCreated {
@@ -180,6 +265,10 @@ func TestNotesHandler_CreateSuccessWithTags(t *testing.T) {
 func TestNotesHandler_CreateValidationErrors(t *testing.T) {
 	data, _ := json.Marshal(Note{})
 	req, _ := http.NewRequest(http.MethodPost, "/v1/notes", bytes.NewBuffer(data))
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusUnprocessableEntity {
@@ -214,6 +303,10 @@ func TestNotesHandler_CreateValidationErrors(t *testing.T) {
 func TestNotesHandler_UpdateSuccess(t *testing.T) {
 	data, _ := json.Marshal(Note{Title: "Go"})
 	req, _ := http.NewRequest(http.MethodPatch, "/v1/notes/1", bytes.NewBuffer(data))
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusOK {
@@ -230,9 +323,31 @@ func TestNotesHandler_UpdateSuccess(t *testing.T) {
 	})
 }
 
+func TestNotesHandler_UpdateNotAuthenticated(t *testing.T) {
+	data, _ := json.Marshal(Note{Title: "Go"})
+	req, _ := http.NewRequest(http.MethodPatch, "/v1/notes/1", bytes.NewBuffer(data))
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusUnauthorized
+	})
+}
+
+func TestNotesHandler_UpdateNotAuthorisedToUpdateAnotherUsersNote(t *testing.T) {
+	data, _ := json.Marshal(Note{Title: "Go"})
+	req, _ := http.NewRequest(http.MethodPatch, "/v1/notes/12", bytes.NewBuffer(data))
+
+	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusUnauthorized
+	})
+}
+
 func TestNotesHandler_UpdateValidationErrors(t *testing.T) {
 	data, _ := json.Marshal(Note{})
 	req, _ := http.NewRequest(http.MethodPatch, "/v1/notes/1", bytes.NewBuffer(data))
+	req.Header.Set(
+		"Authorization",
+		fmt.Sprintf("Bearer %s", "access-token"),
+	)
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusUnprocessableEntity {

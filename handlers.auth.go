@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"gopkg.in/go-playground/validator.v9"
 	"golang.org/x/crypto/bcrypt"
-	"fmt"
 )
 
 type AuthHandler struct {
@@ -25,60 +24,56 @@ func InitAuthHandler(app *App) *AuthHandler {
 		app.Validator(),
 	}
 
-	app.Engine().POST("/token", h.LoginPassword)
-	app.engine.GET("/info", h.Info)
+	app.Engine().POST("/token", h.Token)
 
 	return h
 }
 
-func (h *AuthHandler) Info(c *gin.Context) {
+func (h *AuthHandler) Token(c *gin.Context) {
 	resp := h.oauth2Server.NewResponse()
 	defer resp.Close()
-
-	if ir := h.oauth2Server.HandleInfoRequest(resp, c.Request); ir != nil {
-		fmt.Println(ir.AccessData.UserData)
-		h.oauth2Server.FinishInfoRequest(resp, c.Request, ir)
-	}
-
-	osin.OutputJSON(resp, c.Writer, c.Request)
-}
-
-func (h *AuthHandler) LoginPassword(c *gin.Context) {
-	resp := h.oauth2Server.NewResponse()
-	defer resp.Close()
-
-	data := struct {
-		Username string `form:"username" validate:"required"`
-		Password string `form:"password" validate:"required"`
-		Scope    string `form:"scope" validate:"omitempty"`
-	}{}
-
-	if err := c.BindQuery(&data); err != nil {
-		// todo not malformed json. fix error
-		h.responseHandler.MalformedJSON(c)
-		return
-	}
-
-	if err := h.validator.Struct(data); err != nil {
-		h.responseHandler.ValidationErrors(c, err)
-		return
-	}
 
 	if ar := h.oauth2Server.HandleAccessRequest(resp, c.Request); ar != nil {
-		user := new(User)
+		switch ar.Type {
+		case osin.PASSWORD:
+			data := struct {
+				GrantType    string `form:"grant_type" validate:"required"`
+				Username     string `form:"username" validate:"required"`
+				Password     string `form:"password" validate:"required"`
+				Scope        string `form:"scope" validate:"omitempty"`
+				ClientId     string `form:"client_id" validate:"required"`
+				ClientSecret string `form:"client_secret" validate:"required"`
+			}{}
 
-		if err := h.db.Where("email = ?", data.Username).Find(user).Error; err != nil {
-			h.responseHandler.Error(c, AuthenticationError, http.StatusBadRequest, "Username or Password is incorrect")
-			return
+			if err := c.ShouldBind(&data); err != nil {
+				// todo not malformed json. fix error
+				h.responseHandler.MalformedJSON(c)
+				return
+			}
+
+			if err := h.validator.Struct(data); err != nil {
+				h.responseHandler.ValidationErrors(c, err)
+				return
+			}
+
+			user := new(User)
+
+			if err := h.db.Where("email = ?", data.Username).Find(user).Error; err != nil {
+				h.responseHandler.Error(c, AuthenticationError, http.StatusBadRequest, "Username or Password is incorrect")
+				return
+			}
+
+			if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(data.Password)); err != nil {
+				h.responseHandler.Error(c, AuthenticationError, http.StatusBadRequest, "Username or Password is incorrect")
+				return
+			}
+
+			ar.UserData = user
+			ar.Authorized = true
+		case osin.REFRESH_TOKEN:
+			ar.Authorized = true
 		}
 
-		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(data.Password)); err != nil {
-			h.responseHandler.Error(c, AuthenticationError, http.StatusBadRequest, "Username or Password is incorrect")
-			return
-		}
-
-		ar.UserData = user
-		ar.Authorized = true
 		h.oauth2Server.FinishAccessRequest(resp, c.Request, ar)
 	}
 

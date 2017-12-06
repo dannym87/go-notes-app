@@ -6,6 +6,7 @@ const (
 	NotFound            = "Not Found"
 	ValidationError     = "Validation Error"
 	AuthenticationError = "Authentication Error"
+	Unauthorised        = "Unauthorised"
 )
 
 type ErrorObject struct {
