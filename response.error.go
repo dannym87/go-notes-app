@@ -5,6 +5,7 @@ const (
 	MalformedJson       = "Malformed JSON"
 	NotFound            = "Not Found"
 	ValidationError     = "Validation Error"
+	AuthenticationError = "Authentication Error"
 )
 
 type ErrorObject struct {

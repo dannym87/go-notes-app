@@ -7,6 +7,7 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/gin-contrib/cors"
+	"github.com/RangelReale/osin"
 )
 
 type App struct {
@@ -14,6 +15,7 @@ type App struct {
 	db              *gorm.DB
 	responseHandler ResponseHandler
 	validator       *validator.Validate
+	oauth2Server    *osin.Server
 }
 
 func InitApp() *App {
@@ -26,7 +28,14 @@ func InitApp() *App {
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&Note{}, &Tag{})
+	db.AutoMigrate(
+		&Note{},
+		&Tag{},
+		&User{},
+		&OAuth2Client{},
+		&OAuth2RefreshToken{},
+		&OAuth2AccessToken{},
+	)
 
 	validator := NewValidator()
 	responseHandler := NewResponseHandler()
@@ -34,7 +43,9 @@ func InitApp() *App {
 	r.Use(cors.Default())
 	r.NoRoute(responseHandler.NoRoute)
 
-	app := &App{r, db, responseHandler, validator}
+	oauth2 := NewOAuth2Server(db)
+
+	app := &App{r, db, responseHandler, validator, oauth2}
 
 	InitHandlers(app)
 
@@ -59,4 +70,8 @@ func (app *App) ResponseHandler() ResponseHandler {
 
 func (app *App) Validator() *validator.Validate {
 	return app.validator
+}
+
+func (app *App) OAuth2Server() *osin.Server {
+	return app.oauth2Server
 }
