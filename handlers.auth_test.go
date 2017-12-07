@@ -324,7 +324,7 @@ func TestAuthHandler_TokenInvalidRefreshToken(t *testing.T) {
 
 	testHTTPResponse(t, app.Engine(), req, func(w *httptest.ResponseRecorder) bool {
 		if w.Code != http.StatusBadRequest {
-			t.Errorf("Expected status code '201', got '%d'", w.Code)
+			t.Errorf("Expected status code '400', got '%d'", w.Code)
 			return false
 		}
 
