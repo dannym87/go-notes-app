@@ -212,6 +212,8 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/Tag"
+        created_by:
+          "$ref": "#/components/schemas/User"
         created_at:
           description: ISO 8601 Date/Time
           type: string
@@ -248,6 +250,33 @@ components:
       type: array
       items:
         "$ref": "#/components/schemas/Tag"
+
+    User:
+      type: object
+      required:
+        - email
+        - first_name
+        - last_name
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        scope:
+          type: string
+        created_at:
+          description: ISO 8601 Date/Time
+          type: string
+          format: date-time
+        updated_at:
+          description: ISO 8601 Date/Time
+          type: string
+          format: date-time
 
     Error:
       type: object
@@ -448,3 +477,4 @@ components:
       flows:
         password:
           tokenUrl: /token
+          refreshUrl: /token
