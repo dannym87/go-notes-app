@@ -5,6 +5,7 @@ services:
     build:
       dockerfile: ./Dockerfile
       context: .
+    command: /opt/bin/run.sh
     working_dir: /go/src/github.com/dannym87/go-notes-app
     volumes:
       - ./:/go/src/github.com/dannym87/go-notes-app
