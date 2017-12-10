@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  app:
+    build:
+      dockerfile: ./Dockerfile
+      context: .
+    working_dir: /go/src/github.com/dannym87/go-notes-app
+    volumes:
+      - ./:/go/src/github.com/dannym87/go-notes-app
+    ports:
+      - 8080:8080
