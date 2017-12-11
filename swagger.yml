@@ -37,11 +37,11 @@ paths:
         201:
           "$ref": "#/components/responses/NoteResponse"
         400:
-          "$ref": "#/components/responses/ErrorsResponse"
+          "$ref": "#/components/responses/MalformedJSONErrorResponse"
         401:
           "$ref": "#/components/responses/UnauthorisedResponse"
         422:
-          "$ref": "#/components/responses/ErrorsResponse"
+          "$ref": "#/components/responses/ValidationErrorResponse"
         404:
           "$ref": "#/components/responses/NotFoundResponse"
   "/v1/notes/{noteId}":
@@ -92,11 +92,11 @@ paths:
         200:
           "$ref": "#/components/responses/NoteResponse"
         400:
-          "$ref": "#/components/responses/ErrorsResponse"
+          "$ref": "#/components/responses/MalformedJSONErrorResponse"
         401:
           "$ref": "#/components/responses/UnauthorisedResponse"
         422:
-          "$ref": "#/components/responses/ErrorsResponse"
+          "$ref": "#/components/responses/ValidationErrorResponse"
         404:
           "$ref": "#/components/responses/NotFoundResponse"
   "/v1/tags":
@@ -127,11 +127,11 @@ paths:
         201:
           "$ref": "#/components/responses/TagResponse"
         400:
-          "$ref": "#/components/responses/ErrorsResponse"
+          "$ref": "#/components/responses/MalformedJSONErrorResponse"
         401:
           "$ref": "#/components/responses/UnauthorisedResponse"
         422:
-          "$ref": "#/components/responses/ErrorsResponse"
+          "$ref": "#/components/responses/ValidationErrorResponse"
         404:
           "$ref": "#/components/responses/NotFoundResponse"
   "/v1/tags/{tagId}":
@@ -182,11 +182,11 @@ paths:
         200:
           "$ref": "#/components/responses/TagResponse"
         400:
-          "$ref": "#/components/responses/ErrorsResponse"
+          "$ref": "#/components/responses/MalformedJSONErrorResponse"
         401:
           "$ref": "#/components/responses/UnauthorisedResponse"
         422:
-          "$ref": "#/components/responses/ErrorsResponse"
+          "$ref": "#/components/responses/ValidationErrorResponse"
         404:
           "$ref": "#/components/responses/NotFoundResponse"
 
@@ -461,6 +461,44 @@ components:
                     status:
                       type: integer
                       example: 401
+                      
+    ValidationErrorResponse:
+      description: The submitted data contains validation errors
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - errors
+            properties:
+              title:
+                type: string
+                example: Validation Error
+              detail:
+                type: string
+                example: "Field validation for 'Title' failed on the 'required' tag [Key: 'Note.Title']"
+              status:
+                type: integer
+                example: 422
+                
+    MalformedJSONErrorResponse:
+      description: The request contains invalid JSON
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - errors
+            properties:
+              title:
+                type: string
+                example: Malformed JSON
+              detail:
+                type: string
+                example: Request contains invalid JSON
+              status:
+                type: integer
+                example: 400
 
   # ------------------------------------
   # Security Schemes
